@@ -1,0 +1,27 @@
+# Unity files to ignore
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Mm]emoryCaptures/
+*.csproj
+*.unityproj
+*.sln
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# Large generated files
+*.resS
+*.apk
+*.exe
+*.unitypackage
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
