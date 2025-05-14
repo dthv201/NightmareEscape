@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] float  mouseSensitivity = 3f;
-    [SerializeField] float movmentSpeed = 5f;
+    [SerializeField] float mouseSensitivity = 3f;
+    [SerializeField] float movementSpeed = 5f;
     [SerializeField] float jumpSpeed = 5f;
     [SerializeField] float mass = 1f;
     [SerializeField] Transform cammeraTransform;
@@ -12,47 +12,46 @@ public class Player : MonoBehaviour
     Vector3 velocity;
     Vector2 look;
 
+    float gravity = -9.81f;
+    bool isJumping;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
     }
-    // void Start()
-    // {
-    //     Cursor.lockState = CursorLockMode.Locked;
-    // }
 
-    // Update is called once per frame
     void Update()
     {
-        UpdateGravity();
-        UpdateMovement();
         UpdateLook();
+        UpdateMovement();
     }
-    void UpdateGravity()
-    {
-      var gravity = Physics.gravity * mass * Time.deltaTime;
-      velocity.y = controller.isGrounded ? -1f : velocity.y + gravity.y;
-    }
-
 
     void UpdateMovement()
     {
-        var x = Input.GetAxis("Horizontal");
-        var y = Input.GetAxis("Vertical");
+        // Movement input
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
-        var input = new Vector3();
-        input += transform.forward * y;
-        input += transform.right * x;
-        input = Vector3.ClampMagnitude(input, 1f);
-        if (Input.GetButtonDown("Jump") && controller.isGrounded)
+        Vector3 move = transform.right * x + transform.forward * z;
+
+        // Gravity and jumping
+        if (controller.isGrounded)
         {
-            velocity.y += jumpSpeed;
+            if (velocity.y < 0)
+                velocity.y = -2f; // small downward force to keep grounded
+
+            if (Input.GetButtonDown("Jump"))
+            {
+                velocity.y = Mathf.Sqrt(jumpSpeed * -2f * gravity);
+            }
         }
 
-      //  transform.Translate(input * movmentSpeed * Time.deltaTime, Space.World);
+        // Apply gravity
+        velocity.y += gravity * Time.deltaTime;
 
-      controller.Move((input * movmentSpeed + velocity) * Time.deltaTime);
+        // Final move
+        Vector3 finalMove = (move * movementSpeed + velocity) * Time.deltaTime;
+        controller.Move(finalMove);
     }
 
     void UpdateLook()
@@ -60,19 +59,19 @@ public class Player : MonoBehaviour
         look.x += Input.GetAxis("Mouse X") * mouseSensitivity;
         look.y -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         look.y = Mathf.Clamp(look.y, -89f, 89f);
-        cammeraTransform.localRotation = Quaternion.Euler(-look.y, 0, 0);
-        transform.localRotation = Quaternion.Euler(0, look.x, 0);
+        cammeraTransform.localRotation = Quaternion.Euler(look.y, 0f, 0f);
+        transform.localRotation = Quaternion.Euler(0f, look.x, 0f);
     }
 
     void OnControllerColliderHit(ControllerColliderHit hit)
-{
-    Rigidbody body = hit.collider.attachedRigidbody;
-
-    if (body != null && !body.isKinematic)
     {
-        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
-        body.linearVelocity = pushDir * 5f; // tweak force multiplier here
-    }
-}
+        Rigidbody body = hit.collider.attachedRigidbody;
 
+        if (body != null && !body.isKinematic)
+        {
+            // Push rigidbody horizontally
+            Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+            body.linearVelocity = pushDir * 5f; // tweak this multiplier
+        }
+    }
 }
